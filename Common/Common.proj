@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.Build.Traversal">
+  <ItemGroup>
+    <Compile Include="Enums\Action.cs" />
+    <Compile Include="Models\Data.cs" />
+    <Compile Include="Models\DataNode\ReadRequest.cs" />
+    <Compile Include="Models\DataNode\WriteRequest.cs" />
+    <Compile Include="Models\NameNode\NameNodeMetaData.cs" />
+    <Compile Include="Models\NameNode\ReadRequest.cs" />
+    <Compile Include="Models\NameNode\WriteRequest.cs" />
+    <Compile Include="Models\NodeAddress.cs" />
+  </ItemGroup>
+</Project>
