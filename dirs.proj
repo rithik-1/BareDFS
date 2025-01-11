@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.Build.Traversal">
   <ItemGroup>
-    <ProjectReference Include="DFS\**\*.proj" />
-    <ProjectReference Include="Common\**\*.proj" />
-    <ProjectReference Include="Client\**\*.csproj" />
+    <ProjectReference Include="DFS\DFS.proj" />
+    <ProjectReference Include="Common.csproj" />
+    <ProjectReference Include="Client\Client.csproj" />
   </ItemGroup>
 </Project>
