@@ -9,9 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="Tests\Client.Tests.csproj" />
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Include="Client.cs" />
-    </ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
+  </ItemGroup>
 </Project>

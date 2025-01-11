@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>BareDFS.Common</PackageId>
+    <OutputType>Library</OutputType>
+    <RootNamespace>BareDFS.Common</RootNamespace>
+    <AssemblyName>BareDFS.Common</AssemblyName>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Memory" Version="4.5.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Enums\Services.cs" />
+    <Compile Include="Models\DataNode\DataNodeData.cs" />
+    <Compile Include="Models\DataNode\ReadRequest.cs" />
+    <Compile Include="Models\DataNode\WriteRequest.cs" />
+    <Compile Include="Models\NameNode\NameNodeMetaData.cs" />
+    <Compile Include="Models\NameNode\ReadRequest.cs" />
+    <Compile Include="Models\NameNode\WriteRequest.cs" />
+    <Compile Include="Models\NodeAddress.cs" />
+  </ItemGroup>
+</Project>

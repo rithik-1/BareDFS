@@ -4,7 +4,7 @@ namespace BareDFS.Common.Enums
     using Newtonsoft.Json.Converters;
 
     [JsonConverter(typeof(StringEnumConverter))]
-    public enum Action
+    public enum Services
     {
         GetData,
         WriteData,

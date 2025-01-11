@@ -25,9 +25,9 @@ namespace BareDFS.Client
 
             using (var nameNodeClient = new TcpClient(nameNodeAddress.Split(':')[0], int.Parse(nameNodeAddress.Split(':')[1])))
             {
-                Call(nameNodeClient, Action.WriteData, request, ref reply);
+                Call(nameNodeClient, Services.WriteData.ToString(), request, ref reply);
                 ulong blockSize = 0;
-                Call(nameNodeClient, Action.GetBlockSize, true, ref blockSize);
+                Call(nameNodeClient, Services.GetBlockSize.ToString(), true, ref blockSize);
 
                 using (var fileStream = new FileStream(fullFilePath, FileMode.Open, FileAccess.Read))
                 {
@@ -46,15 +46,16 @@ namespace BareDFS.Client
 
                         using (var dataNodeClient = new TcpClient(startingDataNode.Host, int.Parse(startingDataNode.ServicePort)))
                         {
-                            var dataNodeRequest = new DataNodePutRequest
+                            var dataNodeRequest = new DataNodeWriteRequest
                             {
                                 BlockId = blockId,
                                 Data = trimmedBytes,
                                 ReplicationNodes = remainingDataNodes
                             };
-                            var dataNodeReply = new DataNodeWriteStatus();
+                            //var dataNodeReply = new DataNodeWriteStatus();
+                            var dataNodeReply = "";
 
-                            Call(dataNodeClient, Action.PutBlock, dataNodeRequest, ref dataNodeReply);
+                            Call(dataNodeClient, Services.PutBlock.ToString(), dataNodeRequest, ref dataNodeReply);
                         }
                     }
                 }
@@ -70,7 +71,7 @@ namespace BareDFS.Client
 
             using (var nameNodeClient = new TcpClient(nameNodeAddress.Split(':')[0], int.Parse(nameNodeAddress.Split(':')[1])))
             {
-                Call(nameNodeClient, Action.GetData, request, ref reply);
+                Call(nameNodeClient, Services.GetData.ToString(), request, ref reply);
                 string fileContents = "";
 
                 foreach (var metaData in reply)
@@ -83,12 +84,12 @@ namespace BareDFS.Client
                     {
                         using (var dataNodeClient = new TcpClient(selectedDataNode.Host, int.Parse(selectedDataNode.ServicePort)))
                         {
-                            var dataNodeRequest = new DataNodeGetRequest { BlockId = blockId };
+                            var dataNodeRequest = new DataNodeReadRequest { BlockId = blockId };
                             var dataNodeReply = new DataNodeData();
 
                             try
                             {
-                                Call(dataNodeClient, Action.GetBlock, dataNodeRequest, ref dataNodeReply);
+                                Call(dataNodeClient, Services.GetBlock.ToString(), dataNodeRequest, ref dataNodeReply);
                                 fileContents += dataNodeReply.Data;
                                 blockFetchStatus = true;
                                 break;
@@ -112,16 +113,16 @@ namespace BareDFS.Client
 
         private static void Call<TRequest, TResponse>(TcpClient client, string serviceMethod, TRequest request, ref TResponse response)
         {
-            using var networkStream = client.GetStream()
+            using (var networkStream = client.GetStream())
             {
-                using var writer = new StreamWriter(networkStream)
+                using (var writer = new StreamWriter(networkStream))
                 {
                     var jsonRequest = System.Text.Json.JsonSerializer.Serialize(new { serviceMethod, request });
                     writer.WriteLine(jsonRequest);
                     writer.Flush();
                 }
 
-                using var reader = new StreamReader(networkStream)
+                using (var reader = new StreamReader(networkStream))
                 {
                     var jsonResponse = reader.ReadLine();
                     response = System.Text.Json.JsonSerializer.Deserialize<TResponse>(jsonResponse);
