@@ -2,6 +2,6 @@
   <ItemGroup>
     <ProjectReference Include="DFS\DFS.proj" />
     <ProjectReference Include="Common.csproj" />
-    <ProjectReference Include="Client\Client.csproj" />
+    <ProjectReference Include="Client\Client.proj" />
   </ItemGroup>
 </Project>

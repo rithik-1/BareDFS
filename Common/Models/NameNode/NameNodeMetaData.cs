@@ -1,4 +1,4 @@
-namespace BareDFS.Common.Models
+namespace BareDFS.Common
 {
     using System;
 
