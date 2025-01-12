@@ -17,6 +17,7 @@ namespace BareDFS.Client.Library
 
         private static bool _Put(ref TcpClient nameNodeClient, string sourcePath, string fileName)
         {
+            // Get the file info
             string fullFilePath = Path.Combine(sourcePath, fileName);
             FileInfo fileInfo = new FileInfo(fullFilePath);
 
@@ -29,6 +30,7 @@ namespace BareDFS.Client.Library
             var request = new NameNodeWriteRequest { FileName = fileName, FileSize = fileSize };
             var reply = new NameNodeMetaData[0];
 
+            // Call the NameNode to get the block addresses for the file to write to and the block size
             Call(nameNodeClient, Services.WriteData.ToString(), request, ref reply);
             ulong blockSize = 0;
             Call(nameNodeClient, Services.GetBlockSize.ToString(), true, ref blockSize);
@@ -52,7 +54,7 @@ namespace BareDFS.Client.Library
 
                     using (var dataNodeClient = new TcpClient(startingDataNode.Host, int.Parse(startingDataNode.ServicePort)))
                     {
-                        var dataNodeRequest = new DataNodeWriteRequest
+                        var dataNodeWriteRequest = new DataNodeWriteRequest
                         {
                             BlockId = blockId,
                             Data = trimmedBytes,
@@ -61,7 +63,7 @@ namespace BareDFS.Client.Library
                         //var dataNodeReply = new DataNodeWriteStatus();
                         var dataNodeReply = "";
 
-                        Call(dataNodeClient, Services.PutBlock.ToString(), dataNodeRequest, ref dataNodeReply);
+                        Call(dataNodeClient, Services.PutBlock.ToString(), dataNodeWriteRequest, ref dataNodeReply);
                     }
                 }
             }
@@ -124,7 +126,7 @@ namespace BareDFS.Client.Library
             {
                 using (var writer = new StreamWriter(networkStream))
                 {
-                    var jsonRequest = JsonConvert.SerializeObject(new { serviceMethod, request });
+                    var jsonRequest = JsonConvert.SerializeObject(new RpcRequest(serviceMethod, request));
                     writer.WriteLine(jsonRequest);
                     writer.Flush();
                 }
