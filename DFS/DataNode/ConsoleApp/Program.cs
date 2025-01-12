@@ -1,45 +1,56 @@
-namespace DFS.DataNode.Client
+namespace BareDFS.DataNode.ConsoleApp
 {
+    using CommandLine;
     using System;
-    using System.IO;
     using System.Net;
     using System.Net.Sockets;
     using System.Runtime.Serialization;
-    using System.Runtime.Serialization.Formatters.Binary;
+    using BareDFS.DataNode.Library;
 
-    public class DataNode
+    public class Program
     {
-        public static void InitializeDataNodeUtil(string dataNodeAddress, string storagePath)
+        private static DataNodeHandler dataNodeHandler = null;
+        public static void Main(string[] args)
         {
-            string[] hostPort = dataNodeAddress.Split(':');
-            if (hostPort.Length != 2)
+            if (args.Length < 2)
             {
-                throw new ArgumentException("Invalid dataNodeAddress format");
+                Console.WriteLine("Usage: \n");
+                Console.WriteLine(".\\Datanode --port <portNumber> --data-location <dataLocation>");
+                Console.WriteLine("\n ------------------------------------ \n\n");
+                Console.WriteLine("Example: \n");
+                Console.WriteLine(".\\Datanode --port 7002 --data-location .dndata3/");
+                Console.WriteLine("\n ------------------------------------ \n\n\n");
             }
 
-            string host = hostPort[0];
-            int port = int.Parse(hostPort[1]);
+            Parser.Default.ParseArguments<InputArgs>(args)
+                   .WithParsed(Run)
+                   .WithNotParsed(HandleParseError);
+        }
 
-            Console.WriteLine($"DataNode to connect to is {dataNodeAddress}");
+        static void Run(InputArgs args)
+        {
+            string dataLocation = args.DataLocation;
+            ushort servicePort = args.ServicePort;
+            dataNodeHandler = dataNodeHandler == null ? new DataNodeHandler(dataLocation, servicePort) : dataNodeHandler;
 
-            TcpListener listener = new TcpListener(IPAddress.Parse(host), port);
-            listener.Start();
-
-            while (true)
+            try
             {
-                TcpClient client = listener.AcceptTcpClient();
-                NetworkStream stream = client.GetStream();
+                dataNodeHandler.StartDataNodeServer();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
 
-                IFormatter formatter = new BinaryFormatter();
-                DataNodeGetRequest request = (DataNodeGetRequest)formatter.Deserialize(stream);
+        }
 
-                string filePath = Path.Combine(storagePath, request.BlockId);
-                string data = File.ReadAllText(filePath);
-
-                DataNodeData reply = new DataNodeData { Data = data };
-                formatter.Serialize(stream, reply);
-
-                client.Close();
+        static void HandleParseError(IEnumerable<Error> errs)
+        {
+            Console.WriteLine("Invalid Arguments");
+            Console.WriteLine("Errors: ");
+            foreach (var err in errs)
+            {
+                Console.WriteLine(err);
             }
         }
     }

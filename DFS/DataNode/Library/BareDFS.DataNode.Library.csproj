@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>BareDFS.DataNode.Library</PackageId>
+    <OutputType>Library</OutputType>
+    <RootNamespace>BareDFS.DataNode.Library</RootNamespace>
+    <AssemblyName>BareDFS.DataNode.Library</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <ProjectReference Include="..\..\..\Common\Common.csproj"/>
+  </ItemGroup>
+</Project>

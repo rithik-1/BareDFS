@@ -21,5 +21,6 @@
     <Compile Include="Models\NameNode\ReadRequest.cs" />
     <Compile Include="Models\NameNode\WriteRequest.cs" />
     <Compile Include="Models\NodeAddress.cs" />
+    <Compile Include="Models\RpcRequest.cs" />
   </ItemGroup>
 </Project>
