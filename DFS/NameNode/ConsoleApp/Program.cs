@@ -1,57 +1,57 @@
-namespace DFS.NameNode.Client
+namespace BareDFS.NameNode.ConsoleApp
 {
+    using BareDFS.NameNode.Library;
+    using CommandLine;
     using System;
     using System.Collections.Generic;
-    using System.IO;
-    using System.Net;
-    using System.Net.Sockets;
-    using System.Runtime.Serialization;
-    using System.Runtime.Serialization.Formatters.Binary;
 
-    public class NameNode
+    public class Program
     {
-        public static List<string> RemoveElementFromList(List<string> elements, int index)
+        private static NameNodeHandler? nameNodeHandler = null;
+
+        public static void Main(string[] args)
         {
-            elements.RemoveAt(index);
-            return elements;
+            if (args.Length < 4)
+            {
+                Console.WriteLine("Usage: \n");
+                Console.WriteLine(".\\Namenode --port <portNumber> --datanodes <dnEndpoints> --block-size-in-kb <blockSize> --replication-factor <replicationFactor>");
+                Console.WriteLine("\n ------------------------------------ \n\n");
+                Console.WriteLine("Example: \n");
+                Console.WriteLine(".\\Namenode --port 9000 --datanodes localhost:7000,localhost:7001,localhost:7002 --block-size-in-kb 10 --replication-factor 2");
+                Console.WriteLine("\n ------------------------------------ \n\n\n");
+            }
+
+            Parser.Default.ParseArguments<InputArgs>(args)
+                   .WithParsed(Run)
+                   .WithNotParsed(HandleParseError);
         }
 
-        public static void DiscoverDataNodes(NameNodeService nameNodeInstance, List<string> listOfDataNodes)
+        static void Run(InputArgs args)
         {
-            nameNodeInstance.IdToDataNodes = new Dictionary<ulong, DataNodeInstance>();
 
-            int availableNumberOfDataNodes = listOfDataNodes.Count;
-            if (availableNumberOfDataNodes == 0)
+            nameNodeHandler ??= new NameNodeHandler(
+                args.ServicePort,
+                args.BlockSize,
+                args.ReplicationFactor,
+                args.DataNodesAddr.Split(',').ToList());
+
+            try
             {
-                Console.WriteLine("No DataNodes specified, discovering ...");
+                nameNodeHandler.StartNameNodeServer();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+        }
 
-                string host = "localhost";
-                int serverPort = 7000;
-
-                NameNodePingRequest pingRequest = new NameNodePingRequest { Host = host, Port = nameNodeInstance.Port };
-                NameNodePingResponse pingResponse;
-
-                while (serverPort < 7050)
-                {
-                    try
-                    {
-                        using (TcpClient client = new TcpClient(host, serverPort))
-                        {
-                            NetworkStream stream = client.GetStream();
-                            IFormatter formatter = new BinaryFormatter();
-                            formatter.Serialize(stream, pingRequest);
-
-                            pingResponse = (NameNodePingResponse)formatter.Deserialize(stream);
-                            // Process pingResponse as needed
-                        }
-                    }
-                    catch (SocketException)
-                    {
-                        // Handle connection failure
-                    }
-
-                    serverPort++;
-                }
+        static void HandleParseError(IEnumerable<Error> errs)
+        {
+            Console.WriteLine("Invalid Arguments");
+            Console.WriteLine("Errors: ");
+            foreach (var err in errs)
+            {
+                Console.WriteLine(err);
             }
         }
     }
