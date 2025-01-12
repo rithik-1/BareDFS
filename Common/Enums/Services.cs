@@ -1,4 +1,4 @@
-namespace BareDFS.Common.Enums
+namespace BareDFS.Common
 {
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;

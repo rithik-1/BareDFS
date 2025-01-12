@@ -1,0 +1,11 @@
+
+<Project Sdk="Microsoft.Build.Traversal">
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="ConsoleApp\Client.ConsoleApp.csproj" />
+    <ProjectReference Include="Library\Client.Library.csproj" />
+    <ProjectReference Include="Test\Client.Test.csproj" />
+  </ItemGroup>
+</Project>
