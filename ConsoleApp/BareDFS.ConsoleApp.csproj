@@ -6,4 +6,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.2.0"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Client\ConsoleApp\Client.ConsoleApp.csproj" />
+    <ProjectReference Include="..\DFS\DataNode\ConsoleApp\BareDFS.DataNode.ConsoleApp.csproj" />
+    <ProjectReference Include="..\DFS\NameNode\ConsoleApp\BareDFS.NameNode.ConsoleApp.csproj" />
+  </ItemGroup>
 </Project>
