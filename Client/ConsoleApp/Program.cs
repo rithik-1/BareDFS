@@ -11,15 +11,15 @@ namespace BareDFS.Client.ConsoleApp
 
         public static void Main(string[] args)
         {
-            if (args.Length < 3)
-            {
-                Console.WriteLine("Invalid Arguments");
-                PrintExampleCommand();
-            }
-
             Console.CancelKeyPress += StopConsoleApp();
 
             do {
+                if (args.Length < 3)
+                {
+                    Console.WriteLine("Invalid Arguments");
+                    PrintExampleCommand();
+                }
+
                 Parser.Default.ParseArguments<InputArgs>(args)
                         .WithParsed(Run)
                         .WithNotParsed(HandleParseError);
