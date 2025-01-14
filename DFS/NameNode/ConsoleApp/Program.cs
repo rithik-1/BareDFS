@@ -71,7 +71,7 @@ namespace BareDFS.NameNode.ConsoleApp
 
         public static void PrintExampleCommand()
         {
-            Console.WriteLine("Example Command: "\n);
+            Console.WriteLine("Example Command: \n");
             Console.WriteLine(".\\Namenode --port <portNumber> --datanodes <dnEndpoints> --block-size-in-kb <blockSize> --replication-factor <replicationFactor>");
             Console.WriteLine("\n ------------------------------------ \n");
             Console.WriteLine("Example: \n");

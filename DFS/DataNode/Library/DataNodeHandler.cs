@@ -1,7 +1,7 @@
 namespace BareDFS.DataNode.Library
 {
     using BareDFS.Common;
-        using Newtonsoft.Json;
+    using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
     using System;
     using System.IO;
@@ -30,42 +30,61 @@ namespace BareDFS.DataNode.Library
             {
                 listener.Start();
                 Console.WriteLine($"DataNode port is {dataNodeInstance.ServicePort}");
-
-                Task.Run(() => AcceptClients(listener));
+                AcceptClients(listener);
 
                 Console.WriteLine($"DataNode daemon started on port: {dataNodeInstance.ServicePort}");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
-            }
-            finally
-            {
-                listener?.Stop();
+                throw;
             }
         }
 
         private async Task AcceptClients(TcpListener listener)
         {
-            while (true)
+            try
             {
-                var client = await listener.AcceptTcpClientAsync();
-                Task.Run(() => HandleClient(client));
+                while (true)
+                {
+                    var client = await listener.AcceptTcpClientAsync();
+                    Console.WriteLine("Client connected.");
+                    Task.Run(() => HandleClient(client));
+                }
+            }
+            catch (ObjectDisposedException ex)
+            {
+                Console.WriteLine($"Listener has been stopped: {ex.Message}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error accepting client: {ex.Message}\n");
+                throw;
             }
         }
 
         private void HandleClient(TcpClient client)
         {
-            using (var stream = client.GetStream())
-            using (var reader = new StreamReader(stream))
-            using (var jsonReader = new JsonTextReader(reader))
+            try
             {
-                var request = JsonSerializer.Create().Deserialize<RpcRequest>(jsonReader);
-                var response = ExecuteOperation(request);
-                //formatter.Serialize(stream, response);
+                using (var stream = client.GetStream())
+                using (var reader = new StreamReader(stream))
+                using (var jsonReader = new JsonTextReader(reader))
+                {
+                    var request = JsonSerializer.Create().Deserialize<RpcRequest>(jsonReader);
+                    var response = ExecuteOperation(request);
+                    //formatter.Serialize(stream, response);
+                }
             }
-
-            client.Close();
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error handling client: {ex.Message}");
+            }
+            finally
+            {
+                client.Close();
+            }
         }
 
         private object ExecuteOperation(RpcRequest request)

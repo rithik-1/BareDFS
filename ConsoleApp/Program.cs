@@ -134,7 +134,7 @@ namespace BareDFS.ConsoleApp
         {
             Console.WriteLine("Example Commands: \n");
             Console.WriteLine("datanode --port 7000 --data-location /path/to/data\n");
-            Console.WriteLine("namenode --port 9000 --datanodes localhost:7000,localhost:7001 --block-size 32 --replication-factor 3\n");
+            Console.WriteLine("namenode --port 9000 --datanodes localhost:7000,localhost:7001 --block-size-in-kb 32 --replication-factor 3\n");
             Console.WriteLine("client --namenode localhost:9000 --operation put --source-path /path/to/file --filename file.txt\n");
             Console.WriteLine("client --namenode localhost:9000 --operation get --filename file.txt\n");
             Console.WriteLine("The datanode should be first setup, then the namenode, and finally the client can do put/get operations.\n");
