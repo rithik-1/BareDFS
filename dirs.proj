@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.Build.Traversal">
   <ItemGroup>
-    <ProjectReference Include="DFS\DFS.proj" />
-    <ProjectReference Include="Common.csproj" />
     <ProjectReference Include="Client\Client.proj" />
+    <ProjectReference Include="ConsoleApp\BareDFS.ConsoleApp.csproj" />
+    <ProjectReference Include="DFS\BareDFS.DFS.proj" />
   </ItemGroup>
 </Project>
