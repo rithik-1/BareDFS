@@ -3,6 +3,8 @@ namespace BareDFS.Client.Library
     using Newtonsoft.Json;
     using Newtonsoft.Json.Converters;
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.IO;
     using System.Net.Sockets;
     using System.Runtime.Serialization.Formatters.Binary;
@@ -48,11 +50,11 @@ namespace BareDFS.Client.Library
                     var blockAddresses = metaData.BlockAddresses;
 
                     var startingDataNode = blockAddresses[0];
-                    var remainingDataNodes = new NodeAddress[blockAddresses.Length - 1];
-                    if (blockAddresses.Length > 1)
-                        Array.Copy(blockAddresses, 1, remainingDataNodes, 0, blockAddresses.Length - 1);
+                    var remainingDataNodes = new List<NodeAddress>();
+                    if (blockAddresses.Count > 1)
+                        remainingDataNodes = blockAddresses.Skip(1).ToList();
 
-                    using (var dataNodeClient = new TcpClient(startingDataNode.Host, int.Parse(startingDataNode.ServicePort)))
+                    using (var dataNodeClient = new TcpClient(startingDataNode.Host, startingDataNode.ServicePort))
                     {
                         var dataNodeWriteRequest = new DataNodeWriteRequest
                         {
@@ -92,7 +94,7 @@ namespace BareDFS.Client.Library
 
                 foreach (var selectedDataNode in blockAddresses)
                 {
-                    using (var dataNodeClient = new TcpClient(selectedDataNode.Host, int.Parse(selectedDataNode.ServicePort)))
+                    using (var dataNodeClient = new TcpClient(selectedDataNode.Host, selectedDataNode.ServicePort))
                     {
                         var dataNodeRequest = new DataNodeReadRequest { BlockId = blockId };
                         var dataNodeReply = new DataNodeData();

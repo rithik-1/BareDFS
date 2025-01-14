@@ -12,12 +12,13 @@ namespace BareDFS.DataNode.ConsoleApp
         {
             if (args.Length < 2)
             {
+                Console.WriteLine("Invalid Arguments");
                 Console.WriteLine("Usage: \n");
                 Console.WriteLine(".\\Datanode --port <portNumber> --data-location <dataLocation>");
-                Console.WriteLine("\n ------------------------------------ \n\n");
+                Console.WriteLine("\n ------------------------------------ \n");
                 Console.WriteLine("Example: \n");
                 Console.WriteLine(".\\Datanode --port 7002 --data-location .dndata3/");
-                Console.WriteLine("\n ------------------------------------ \n\n\n");
+                Console.WriteLine("\n ------------------------------------ \n\n");
             }
 
             Parser.Default.ParseArguments<InputArgs>(args)

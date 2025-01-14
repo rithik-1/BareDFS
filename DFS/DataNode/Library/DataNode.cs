@@ -2,6 +2,8 @@ namespace BareDFS.DataNode.Library
 {
     using BareDFS.Common;
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.IO;
     using System.Net;
     using System.Net.Sockets;
@@ -37,15 +39,15 @@ namespace BareDFS.DataNode.Library
             var blockId = request.BlockId;
             var blockAddresses = request.ReplicationNodes;
 
-            if (blockAddresses.Length == 0)
+            if (blockAddresses.Count == 0)
             {
                 return true;
             }
 
             var startingDataNode = blockAddresses[0];
-            var remainingDataNodes = new NodeAddress[blockAddresses.Length - 1];
-            if (blockAddresses.Length > 1)
-                Array.Copy(blockAddresses, 1, remainingDataNodes, 0, blockAddresses.Length - 1);
+            var remainingDataNodes = new List<NodeAddress>();
+            if (blockAddresses.Count > 1)
+                remainingDataNodes = blockAddresses.Skip(1).ToList();
 
             using (var client = new TcpClient(startingDataNode.Host, int.Parse(startingDataNode.ServicePort.ToString())))
             {
