@@ -13,12 +13,13 @@ namespace BareDFS.NameNode.ConsoleApp
         {
             if (args.Length < 4)
             {
+                Console.WriteLine("Invalid Arguments");
                 Console.WriteLine("Usage: \n");
                 Console.WriteLine(".\\Namenode --port <portNumber> --datanodes <dnEndpoints> --block-size-in-kb <blockSize> --replication-factor <replicationFactor>");
-                Console.WriteLine("\n ------------------------------------ \n\n");
+                Console.WriteLine("\n ------------------------------------ \n");
                 Console.WriteLine("Example: \n");
                 Console.WriteLine(".\\Namenode --port 9000 --datanodes localhost:7000,localhost:7001,localhost:7002 --block-size-in-kb 10 --replication-factor 2");
-                Console.WriteLine("\n ------------------------------------ \n\n\n");
+                Console.WriteLine("\n ------------------------------------ \n\n");
             }
 
             Parser.Default.ParseArguments<InputArgs>(args)
