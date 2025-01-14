@@ -1,0 +1,8 @@
+
+<Project Sdk="Microsoft.Build.Traversal">
+  <ItemGroup>
+    <ProjectReference Include="ConsoleApp\BareDFS.NameNode.ConsoleApp.csproj" />
+    <ProjectReference Include="Library\BareDFS.NameNode.Library.csproj" />
+    <ProjectReference Include="Test\BareDFS.NameNode.Test.csproj" />
+  </ItemGroup>
+</Project>
