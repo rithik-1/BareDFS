@@ -1,32 +1,31 @@
 namespace BareDFS.Client.ConsoleApp
 {
+    using BareDFS.Client.Library;
     using CommandLine;
     using System;
-    using System.Net;
-    using System.Net.Sockets;
-    using System.Runtime.Serialization;
-    using BareDFS.Client.Library;
 
     public class Program
     {
-        private static ClientHandler clientHandler;
+        private static ClientHandler? clientHandler = null;
+        private static ManualResetEvent _quitEvent = new ManualResetEvent(false);
 
         public static void Main(string[] args)
         {
             if (args.Length < 3)
             {
-                Console.WriteLine("Usage: \n");
-                Console.WriteLine(".\\BareDFSClient --namenode <Endpoint> --operation put --source-path <locationToFile> --filename <fileName>");
-                Console.WriteLine(".\\BareDFSClient --namenode <Endpoint> --operation get --filename <fileName>");
-                Console.WriteLine("\n ------------------------------------ \n\n");
-                Console.WriteLine("Example: \n");
-                Console.WriteLine(".\\BareDFSClient --namenode localhost:9000 --operation get --filename foo.bar");
-                Console.WriteLine("\n ------------------------------------ \n\n\n");
+                Console.WriteLine("Invalid Arguments");
+                PrintExampleCommand();
             }
 
-            Parser.Default.ParseArguments<InputArgs>(args)
-                   .WithParsed(Run)
-                   .WithNotParsed(HandleParseError);
+            Console.CancelKeyPress += StopConsoleApp();
+
+            do {
+                Parser.Default.ParseArguments<InputArgs>(args)
+                        .WithParsed(Run)
+                        .WithNotParsed(HandleParseError);
+                args = Console.ReadLine().Split(' ');
+            }
+            while (!_quitEvent.WaitOne(0));
         }
 
         static void Run(InputArgs args)
@@ -35,7 +34,7 @@ namespace BareDFS.Client.ConsoleApp
             string operation = args.Operation;
             string fileName = args.FileName;
 
-            clientHandler = new ClientHandler();
+            clientHandler ??= new ClientHandler();
 
             switch (operation)
             {
@@ -68,6 +67,30 @@ namespace BareDFS.Client.ConsoleApp
             {
                 Console.WriteLine(err);
             }
+            Console.WriteLine();
+
+            PrintExampleCommand();
+        }
+
+        public static ConsoleCancelEventHandler StopConsoleApp()
+        {
+            void ConsoleCancelHandler(object sender, ConsoleCancelEventArgs e)
+            {
+                _quitEvent.Set();
+            }
+
+            return new ConsoleCancelEventHandler(ConsoleCancelHandler);
+        }
+
+        private static void PrintExampleCommand()
+        {
+            Console.WriteLine("Usage: \n");
+            Console.WriteLine(".\\BareDFSClient --namenode <Endpoint> --operation put --source-path <locationToFile> --filename <fileName>");
+            Console.WriteLine(".\\BareDFSClient --namenode <Endpoint> --operation get --filename <fileName>");
+            Console.WriteLine("\n ------------------------------------ \n");
+            Console.WriteLine("Example: \n");
+            Console.WriteLine(".\\BareDFSClient --namenode localhost:9000 --operation get --filename foo.bar");
+            Console.WriteLine("\n ------------------------------------ \n\n");
         }
     }
 }
