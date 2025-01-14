@@ -8,6 +8,7 @@ namespace BareDFS.NameNode.ConsoleApp
     public class Program
     {
         private static NameNodeHandler? nameNodeHandler = null;
+        private static ManualResetEvent _quitEvent = new ManualResetEvent(false);
 
         public static void Main(string[] args)
         {
@@ -22,9 +23,13 @@ namespace BareDFS.NameNode.ConsoleApp
                 Console.WriteLine("\n ------------------------------------ \n\n");
             }
 
+            Console.CancelKeyPress += StopConsoleApp();
+
             Parser.Default.ParseArguments<InputArgs>(args)
                    .WithParsed(Run)
                    .WithNotParsed(HandleParseError);
+
+            _quitEvent.WaitOne();
         }
 
         static void Run(InputArgs args)
@@ -54,6 +59,16 @@ namespace BareDFS.NameNode.ConsoleApp
             {
                 Console.WriteLine(err);
             }
+        }
+
+        public static ConsoleCancelEventHandler StopConsoleApp()
+        {
+            void ConsoleCancelHandler(object sender, ConsoleCancelEventArgs e)
+            {
+                _quitEvent.Set();
+            }
+
+            return new ConsoleCancelEventHandler(ConsoleCancelHandler);
         }
     }
 }

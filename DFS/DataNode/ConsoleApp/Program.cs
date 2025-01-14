@@ -7,23 +7,23 @@ namespace BareDFS.DataNode.ConsoleApp
     public class Program
     {
         private static DataNodeHandler? dataNodeHandler = null;
+        private static ManualResetEvent _quitEvent = new ManualResetEvent(false);
 
         public static void Main(string[] args)
         {
             if (args.Length < 2)
             {
                 Console.WriteLine("Invalid Arguments");
-                Console.WriteLine("Usage: \n");
-                Console.WriteLine(".\\Datanode --port <portNumber> --data-location <dataLocation>");
-                Console.WriteLine("\n ------------------------------------ \n");
-                Console.WriteLine("Example: \n");
-                Console.WriteLine(".\\Datanode --port 7002 --data-location .dndata3/");
-                Console.WriteLine("\n ------------------------------------ \n\n");
+                PrintExampleCommand();
             }
 
+            Console.CancelKeyPress += StopConsoleApp();
+
             Parser.Default.ParseArguments<InputArgs>(args)
-                   .WithParsed(Run)
-                   .WithNotParsed(HandleParseError);
+                    .WithParsed(Run)
+                    .WithNotParsed(HandleParseError);
+
+            _quitEvent.WaitOne();
         }
 
         static void Run(InputArgs args)
@@ -50,6 +50,29 @@ namespace BareDFS.DataNode.ConsoleApp
             {
                 Console.WriteLine(err);
             }
+            Console.WriteLine();
+
+            PrintExampleCommand();
+        }
+
+        public static ConsoleCancelEventHandler StopConsoleApp()
+        {
+            void ConsoleCancelHandler(object sender, ConsoleCancelEventArgs e)
+            {
+                _quitEvent.Set();
+            }
+
+            return new ConsoleCancelEventHandler(ConsoleCancelHandler);
+        }
+
+        private static void PrintExampleCommand()
+        {
+            Console.WriteLine("Usage: \n");
+            Console.WriteLine(".\\Datanode --port <portNumber> --data-location <dataLocation>");
+            Console.WriteLine("\n ------------------------------------ \n");
+            Console.WriteLine("Example: \n");
+            Console.WriteLine(".\\Datanode --port 7002 --data-location .dndata3/");
+            Console.WriteLine("\n ------------------------------------ \n\n");
         }
     }
 }
