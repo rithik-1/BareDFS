@@ -7,6 +7,6 @@ namespace BareDFS.Common
     [Serializable]
     public class DataNodeData
     {
-        public string Data { get; set; }
+        public byte[] Data { get; set; }
     }
 }

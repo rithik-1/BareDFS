@@ -2,14 +2,12 @@ namespace BareDFS.DataNode.ConsoleApp
 {
     using CommandLine;
     using System;
-    using System.Net;
-    using System.Net.Sockets;
-    using System.Runtime.Serialization;
     using BareDFS.DataNode.Library;
 
     public class Program
     {
-        private static DataNodeHandler dataNodeHandler = null;
+        private static DataNodeHandler? dataNodeHandler = null;
+
         public static void Main(string[] args)
         {
             if (args.Length < 2)
@@ -31,7 +29,7 @@ namespace BareDFS.DataNode.ConsoleApp
         {
             string dataLocation = args.DataLocation;
             ushort servicePort = args.ServicePort;
-            dataNodeHandler = dataNodeHandler == null ? new DataNodeHandler(dataLocation, servicePort) : dataNodeHandler;
+            dataNodeHandler ??= new DataNodeHandler(dataLocation, servicePort);
 
             try
             {
@@ -41,7 +39,6 @@ namespace BareDFS.DataNode.ConsoleApp
             {
                 Console.WriteLine($"Error: {ex.Message}");
             }
-
         }
 
         static void HandleParseError(IEnumerable<Error> errs)

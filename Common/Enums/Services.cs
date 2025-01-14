@@ -11,5 +11,7 @@ namespace BareDFS.Common
         GetBlockSize,
         PutBlock,
         GetBlock,
+        Heartbeat,
+        Ping
     }
 }

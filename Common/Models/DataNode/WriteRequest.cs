@@ -1,12 +1,13 @@
 namespace BareDFS.Common
 {
     using System;
+    using System.Collections.Generic;
 
     [Serializable]
     public class DataNodeWriteRequest
     {
-        public int BlockId { get; set; }
+        public string BlockId { get; set; }
         public byte[] Data { get; set; }
-        public NodeAddress[] ReplicationNodes { get; set; }
+        public List<NodeAddress> ReplicationNodes { get; set; }
     }
 }

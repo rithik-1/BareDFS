@@ -1,11 +1,12 @@
 namespace BareDFS.Common
 {
     using System;
+    using System.Collections.Generic;
 
     [Serializable]
     public class NameNodeMetaData
     {
-        public int BlockId { get; set; }
-        public NodeAddress[] BlockAddresses { get; set; }
+        public string BlockId { get; set; }
+        public List<NodeAddress> BlockAddresses { get; set; }
     }
 }

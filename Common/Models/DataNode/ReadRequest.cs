@@ -5,6 +5,6 @@ namespace BareDFS.Common
     [Serializable]
     public class DataNodeReadRequest
     {
-        public int BlockId { get; set; }
+        public string BlockId { get; set; }
     }
 }
