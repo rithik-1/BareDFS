@@ -2,12 +2,10 @@ namespace BareDFS.DataNode.Library
 {
     using BareDFS.Common;
     using Newtonsoft.Json;
-    using Newtonsoft.Json.Converters;
     using System;
     using System.IO;
     using System.Net;
     using System.Net.Sockets;
-    using System.Runtime.Serialization;
     using System.Threading.Tasks;
 
     [Serializable]
@@ -68,18 +66,32 @@ namespace BareDFS.DataNode.Library
         {
             try
             {
-                using (var stream = client.GetStream())
-                using (var reader = new StreamReader(stream))
-                using (var jsonReader = new JsonTextReader(reader))
+                using (var networkStream = client.GetStream())
                 {
-                    var request = JsonSerializer.Create().Deserialize<RpcRequest>(jsonReader);
-                    var response = ExecuteOperation(request);
-                    //formatter.Serialize(stream, response);
+                    var response = new object();
+                    var reader = new StreamReader(networkStream);
+                    var timeout = Task.Delay(5000);
+                    var readTask = reader.ReadLineAsync();
+                    if (Task.WhenAny(timeout, readTask).Result == readTask)
+                    {
+                        response = ExecuteOperation(JsonConvert.DeserializeObject<RpcRequest>(readTask.Result));
+                        Console.WriteLine($"DataNode Received: {readTask.Result}");
+                    }
+                    else
+                    {
+                        throw new TimeoutException($"The operation read from stream has timed out.");
+                    }
+
+                    var writer = new StreamWriter(networkStream);
+                    var jsonRequest = JsonConvert.SerializeObject(response);
+                    writer.WriteLine(jsonRequest);
+                    writer.Flush();
+                    Console.WriteLine($"Sent from DataNode: {response}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error handling client: {ex.Message}");
+                Console.WriteLine($"[DataNode] Error handling client: {ex.Message}");
             }
             finally
             {
@@ -99,6 +111,12 @@ namespace BareDFS.DataNode.Library
                     break;
                 case "PutBlock":
                     return DataNode.PutData(dataNodeInstance.DataDirectory, (DataNodeWriteRequest)data);
+                    break;
+                case "Ping":
+                    return DataNode.Ping(data);
+                    break;
+                case "Heartbeat":
+                    return DataNode.Heartbeat(data);
                     break;
                 default:
                     Console.WriteLine($"Invalid Operation: {operation}");

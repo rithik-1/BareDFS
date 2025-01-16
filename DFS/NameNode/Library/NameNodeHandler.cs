@@ -4,6 +4,7 @@ namespace BareDFS.NameNode.Library
     using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Net;
     using System.Net.Sockets;
     using System.Threading;
@@ -73,18 +74,28 @@ namespace BareDFS.NameNode.Library
         {
             try
             {
-                using (var stream = client.GetStream())
-                using (var reader = new System.IO.StreamReader(stream))
-                using (var jsonReader = new JsonTextReader(reader))
+                using (var networkStream = client.GetStream())
                 {
-                    var request = JsonSerializer.Create().Deserialize<RpcRequest>(jsonReader);
-                    var response = ExecuteOperation(request);
-                    using (var writer = new System.IO.StreamWriter(stream))
-                    using (var jsonWriter = new JsonTextWriter(writer))
+                    var response = new object();
+                    var reader = new StreamReader(networkStream);
+                    var timeout = Task.Delay(5000);
+                    var readTask = reader.ReadLineAsync();
+                    if (Task.WhenAny(timeout, readTask).Result == readTask)
                     {
-                        JsonSerializer.Create().Serialize(jsonWriter, response);
+                        Console.WriteLine($"NameNode Received: {readTask.Result}");
+                        response = ExecuteOperation(JsonConvert.DeserializeObject<RpcRequest>(readTask.Result));
                     }
-                    //formatter.Serialize(stream, response);
+                    else
+                    {
+                        throw new TimeoutException($"The operation read from stream has timed out.");
+                    }
+
+                    var writer = new StreamWriter(networkStream);
+                    var jsonRequest = JsonConvert.SerializeObject(response);
+                    writer.WriteLine(jsonRequest);
+                    writer.Flush();
+                    Console.WriteLine($"Sent from NameNode: {response}");
+                    Thread.Sleep(10000);
                 }
             }
             catch (Exception ex)
@@ -93,6 +104,7 @@ namespace BareDFS.NameNode.Library
             }
             finally
             {
+                Console.WriteLine("NameNode Closing Connection.");
                 client.Close();
             }
         }
@@ -100,13 +112,13 @@ namespace BareDFS.NameNode.Library
         private object ExecuteOperation(RpcRequest request)
         {
             string operation = request.Operation;
-            var data = request.Data;
+            var data = request.Data.ToString();
 
             switch (operation)
             {
                 case "GetData":
                     List<NameNodeMetaData> getDataReply = new List<NameNodeMetaData>();
-                    if (nameNode.GetData((NameNodeReadRequest)data, ref getDataReply) == true)
+                    if (nameNode.GetData(JsonConvert.DeserializeObject<NameNodeReadRequest>(data), ref getDataReply) == true)
                     {
                         return getDataReply;
                     }
@@ -116,7 +128,7 @@ namespace BareDFS.NameNode.Library
                     }
                 case "WriteData":
                     List<NameNodeMetaData> writeDataReply = new List<NameNodeMetaData>();
-                    if (nameNode.PutData((NameNodeWriteRequest)data, ref writeDataReply) == true)
+                    if (nameNode.PutData(JsonConvert.DeserializeObject<NameNodeWriteRequest>(data), ref writeDataReply) == true)
                     {
                         return writeDataReply;
                     }

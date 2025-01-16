@@ -5,30 +5,28 @@ namespace BareDFS.DataNode.Library
     using System.Collections.Generic;
     using System.Linq;
     using System.IO;
-    using System.Net;
     using System.Net.Sockets;
     using System.Text;
-    using System.Threading.Tasks;
 
     [Serializable]
     public static class DataNode
     {
-        public static bool Ping(NodeAddress nameNode, ref string reply)
+        public static bool Ping(object data)
         {
-            var NameNodeHost = nameNode.Host;
-            ushort NameNodePort = nameNode.ServicePort;
-            Console.WriteLine($"Received ping from NameNode, recorded as {{NameNodeHost: {NameNodeHost}, NameNodePort: {NameNodePort}}}");
+            if (data != null)
+            {
+                Console.WriteLine($"Received ping from NameNode. NameNode: {data}");
+                return true;
+            }
 
-            reply = "Ack = true";
-            return true;
+            return false;
         }
 
-        public static bool Heartbeat(bool request, ref bool response)
+        public static bool Heartbeat(object data)
         {
-            if (request)
+            if (data != null)
             {
-                Console.WriteLine("Received heartbeat from NameNode");
-                response = true;
+                Console.WriteLine($"Received heartbeat from NameNode.");
                 return true;
             }
             return false;
@@ -75,7 +73,7 @@ namespace BareDFS.DataNode.Library
             {
                 File.WriteAllText(filePath, request.Data.ToString(), Encoding.UTF8);
                 var reply = new DataNodeWriteResponse { Status = true };
-                var status = ForwardForReplication(request, ref reply);
+                //var status = ForwardForReplication(request, ref reply);
                 return reply;
             }
             catch (Exception e)
@@ -101,19 +99,5 @@ namespace BareDFS.DataNode.Library
                 return new DataNodeReadResponse { Status = false, Data = "", Error = e.Message };
             }
         }
-    }
-
-    [Serializable]
-    public class DataNodeWriteResponse
-    {
-        public bool Status { get; set; }
-    }
-
-    [Serializable]
-    public class DataNodeReadResponse
-    {
-        public bool Status { get; set; }
-        public string Data { get; set; }
-        public string Error { get; set; }
     }
 }
