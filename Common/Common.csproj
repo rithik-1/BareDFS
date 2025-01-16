@@ -16,7 +16,9 @@
     <Compile Include="Enums\Services.cs" />
     <Compile Include="Models\DataNode\DataNodeData.cs" />
     <Compile Include="Models\DataNode\ReadRequest.cs" />
+    <Compile Include="Models\DataNode\ReadResponse.cs" />
     <Compile Include="Models\DataNode\WriteRequest.cs" />
+    <Compile Include="Models\DataNode\WriteResponse.cs" />
     <Compile Include="Models\NameNode\NameNodeMetaData.cs" />
     <Compile Include="Models\NameNode\ReadRequest.cs" />
     <Compile Include="Models\NameNode\WriteRequest.cs" />

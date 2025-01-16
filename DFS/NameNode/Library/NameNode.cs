@@ -6,8 +6,8 @@ namespace BareDFS.NameNode.Library
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
-    using System.Net;
     using System.Net.Sockets;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -58,6 +58,7 @@ namespace BareDFS.NameNode.Library
             nameNodeInstance.FileNameToBlocks[request.FileName] = new List<string>();
             var numberOfBlocksToAllocate = (ulong)Math.Ceiling((double)request.FileSize / nameNodeInstance.BlockSize);
             reply = AllocateBlocks(request.FileName, numberOfBlocksToAllocate);
+            Console.WriteLine($"WriteData: {numberOfBlocksToAllocate} blocks allocated for file name {request.FileName}.");
             return true;
         }
 
@@ -102,9 +103,10 @@ namespace BareDFS.NameNode.Library
 
         private void HeartbeatToDataNodes()
         {
+            var heartbeatRequest = new NodeAddress { Host = "localhost", ServicePort = nameNodeInstance.Port };
             while (true)
             {
-                Thread.Sleep(5000);
+                Thread.Sleep(10000);
                 foreach (var dataNode in nameNodeInstance.IdToDataNodes)
                 {
                     var nodeAddres = dataNode.Value;
@@ -114,9 +116,9 @@ namespace BareDFS.NameNode.Library
                         {
                             client.Connect(nodeAddres.Host, nodeAddres.ServicePort);
                             var response = false;
-                            CallService(client, Services.Heartbeat.ToString(), true, ref response);
+                            CallService(client, Services.Heartbeat.ToString(), heartbeatRequest, ref response);
                             if (!response)
-                                Console.WriteLine("No heartbeat response from DataNode {nodeAddres.Host}:{nodeAddres.ServicePort}");
+                                Console.WriteLine($"No heartbeat response from DataNode {nodeAddres.Host}:{nodeAddres.ServicePort}");
                         }
                     }
                     catch
@@ -196,7 +198,7 @@ namespace BareDFS.NameNode.Library
                     catch (Exception ex)
                     {
                         Console.WriteLine($"Exception in receiving ack from {dataNodeUri}");
-                        Console.WriteLine($"exception: {ex.Message}");
+                        Console.WriteLine($"Exception: {ex.Message}");
                         listOfDataNodes.Remove(dataNode.Key);
                     }
                     Console.WriteLine($"DataNode ID: {dataNode.Key} at {dataNode.Value.Host}:{dataNode.Value.ServicePort}\n");
@@ -301,17 +303,25 @@ namespace BareDFS.NameNode.Library
         {
             using (var networkStream = client.GetStream())
             {
-                using (var writer = new StreamWriter(networkStream))
-                {
-                    var jsonRequest = JsonConvert.SerializeObject(new RpcRequest(serviceMethod, request));
-                    writer.WriteLine(jsonRequest);
-                    writer.Flush();
-                }
+                var writer = new StreamWriter(networkStream);
+                var jsonRequest = JsonConvert.SerializeObject(new RpcRequest(serviceMethod, request));
+                writer.WriteLine(jsonRequest);
+                writer.Flush();
 
                 using (var reader = new StreamReader(networkStream))
                 {
-                    var jsonResponse = reader.ReadLine();
-                    reply = JsonConvert.DeserializeObject<TReply>(jsonResponse);
+                    // Wait for some time for the message to appear before closing the connection
+                    var timeout = Task.Delay(5000); // 5 seconds timeout
+                    var readTask = reader.ReadLineAsync();
+
+                    if (Task.WhenAny(timeout, readTask).Result == readTask)
+                    {
+                        reply = JsonConvert.DeserializeObject<TReply>(readTask.Result);
+                    }
+                    else
+                    {
+                        throw new TimeoutException($"The operation: {serviceMethod} has timed out.");
+                    }
                 }
             }
         }

@@ -5,7 +5,6 @@ namespace BareDFS.ConsoleApp
     using BareDFS.NameNode.Library;
     using CommandLine;
     using System;
-    using System.IO;
     using System.Linq;
     using System.Collections.Generic;
 
@@ -37,7 +36,15 @@ namespace BareDFS.ConsoleApp
                             errs => { HandleParseError(errs); return null; });
 
                 Console.WriteLine("\nEnter another command or press Ctrl+C to exit\n");
-                args = Console.ReadLine().Split(' ');
+                var input = Console.ReadLine();
+                if (input != null)
+                {
+                    args = input.Split(' ');
+                }
+                else
+                {
+                    _quitEvent.Set();
+                }
             }
             while (!_quitEvent.WaitOne(0));
         }
