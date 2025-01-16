@@ -6,6 +6,7 @@ namespace BareDFS.DataNode.Library
     using System.IO;
     using System.Net;
     using System.Net.Sockets;
+    using System.Text;
     using System.Threading.Tasks;
 
     [Serializable]
@@ -64,53 +65,41 @@ namespace BareDFS.DataNode.Library
 
         private void HandleClient(TcpClient client)
         {
+            NetworkStream stream = client.GetStream();
+            byte[] buffer = new byte[10240];    // 10KB
+            int bytesRead;
+
             try
             {
-                using (var networkStream = client.GetStream())
+                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    var response = new object();
-                    var reader = new StreamReader(networkStream);
-                    var timeout = Task.Delay(5000);
-                    var readTask = reader.ReadLineAsync();
-                    if (Task.WhenAny(timeout, readTask).Result == readTask)
-                    {
-                        response = ExecuteOperation(JsonConvert.DeserializeObject<RpcRequest>(readTask.Result));
-                        Console.WriteLine($"DataNode Received: {readTask.Result}");
-                    }
-                    else
-                    {
-                        throw new TimeoutException($"The operation read from stream has timed out.");
-                    }
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    Console.WriteLine($"DataNode Received: {message}");
+                    var response = ExecuteOperation(JsonConvert.DeserializeObject<RpcRequest>(message));
 
-                    var writer = new StreamWriter(networkStream);
-                    var jsonRequest = JsonConvert.SerializeObject(response);
-                    writer.WriteLine(jsonRequest);
-                    writer.Flush();
-                    Console.WriteLine($"Sent from DataNode: {response}");
+                    Console.WriteLine($"DataNode Sending: {response}");
+                    byte[] send = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
+                    stream.Write(send, 0, send.Length);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[DataNode] Error handling client: {ex.Message}");
             }
-            finally
-            {
-                client.Close();
-            }
         }
 
         private object ExecuteOperation(RpcRequest request)
         {
             string operation = request.Operation;
-            var data = request.Data;
+            var data = request.Data.ToString();
 
             switch (operation)
             {
                 case "GetBlock":
-                    return DataNode.GetData(dataNodeInstance.DataDirectory, (DataNodeReadRequest)data);
+                    return DataNode.GetData(dataNodeInstance.DataDirectory, JsonConvert.DeserializeObject<DataNodeReadRequest>(data));
                     break;
                 case "PutBlock":
-                    return DataNode.PutData(dataNodeInstance.DataDirectory, (DataNodeWriteRequest)data);
+                    return DataNode.PutData(dataNodeInstance.DataDirectory, JsonConvert.DeserializeObject<DataNodeWriteRequest>(data));
                     break;
                 case "Ping":
                     return DataNode.Ping(data);

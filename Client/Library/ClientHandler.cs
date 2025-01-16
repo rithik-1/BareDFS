@@ -2,6 +2,7 @@ namespace BareDFS.Client.Library
 {
     using System;
     using System.Net.Sockets;
+    using BareDFS.Common;
 
     public class ClientHandler
     {
@@ -11,10 +12,10 @@ namespace BareDFS.Client.Library
 
         public bool PutHandler(string nameNodeAddress, string sourcePath, string fileName)
         {
-            TcpClient rpcClient = InitializeClientUtil(nameNodeAddress);
+            TcpClient tcpClient = InitializeClientUtil(nameNodeAddress);
             try
             {
-                return Client.Put(ref rpcClient, sourcePath, fileName);
+                return Client.Put(tcpClient, sourcePath, fileName);
             }
             catch (Exception e)
             {
@@ -23,17 +24,18 @@ namespace BareDFS.Client.Library
             }
             finally
             {
-                rpcClient.Close();
-                rpcClient.Dispose();
+                Console.WriteLine("Closing connection");
+                tcpClient.Close();
+                tcpClient.Dispose();
             }
         }
 
         public (string, bool) GetHandler(string nameNodeAddress, string fileName)
         {
-            TcpClient rpcClient = InitializeClientUtil(nameNodeAddress);
+            TcpClient tcpClient = InitializeClientUtil(nameNodeAddress);
             try
             {
-                return Client.Get(ref rpcClient, fileName);
+                return Client.Get(ref tcpClient, fileName);
             }
             catch (Exception e)
             {
@@ -42,8 +44,9 @@ namespace BareDFS.Client.Library
             }
             finally
             {
-                rpcClient.Close();
-                rpcClient.Dispose();
+                Console.WriteLine("Closing connection");
+                tcpClient.Close();
+                tcpClient.Dispose();
             }
         }
 

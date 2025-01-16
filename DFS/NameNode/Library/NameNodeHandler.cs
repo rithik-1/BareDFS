@@ -7,6 +7,7 @@ namespace BareDFS.NameNode.Library
     using System.IO;
     using System.Net;
     using System.Net.Sockets;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -72,40 +73,26 @@ namespace BareDFS.NameNode.Library
 
         private void HandleClient(TcpClient client)
         {
+            NetworkStream stream = client.GetStream();
+            byte[] buffer = new byte[10240];    // 10KB
+            int bytesRead;
+
             try
             {
-                using (var networkStream = client.GetStream())
+                while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                 {
-                    var response = new object();
-                    var reader = new StreamReader(networkStream);
-                    var timeout = Task.Delay(5000);
-                    var readTask = reader.ReadLineAsync();
-                    if (Task.WhenAny(timeout, readTask).Result == readTask)
-                    {
-                        Console.WriteLine($"NameNode Received: {readTask.Result}");
-                        response = ExecuteOperation(JsonConvert.DeserializeObject<RpcRequest>(readTask.Result));
-                    }
-                    else
-                    {
-                        throw new TimeoutException($"The operation read from stream has timed out.");
-                    }
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
+                    Console.WriteLine($"NameNode Received: {message}");
+                    var response = ExecuteOperation(JsonConvert.DeserializeObject<RpcRequest>(message));
 
-                    var writer = new StreamWriter(networkStream);
-                    var jsonRequest = JsonConvert.SerializeObject(response);
-                    writer.WriteLine(jsonRequest);
-                    writer.Flush();
-                    Console.WriteLine($"Sent from NameNode: {response}");
-                    Thread.Sleep(10000);
+                    Console.WriteLine($"NameNode Sending: {response}");
+                    byte[] send = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
+                    stream.Write(send, 0, send.Length);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error handling client: {ex.Message}");
-            }
-            finally
-            {
-                Console.WriteLine("NameNode Closing Connection.");
-                client.Close();
+                Console.WriteLine($"[NameNode] Error handling client: {ex.Message}");
             }
         }
 

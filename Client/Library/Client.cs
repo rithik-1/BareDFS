@@ -1,23 +1,22 @@
 namespace BareDFS.Client.Library
 {
     using Newtonsoft.Json;
-    using Newtonsoft.Json.Converters;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.IO;
     using System.Net.Sockets;
-    using System.Runtime.Serialization.Formatters.Binary;
     using BareDFS.Common;
+    using System.Text;
 
     public static class Client
     {
-        public static bool Put(ref TcpClient nameNodeClient, string sourcePath, string fileName)
+        public static bool Put(TcpClient nameNodeClient, string sourcePath, string fileName)
         {
-            return _Put(ref nameNodeClient, sourcePath, fileName);
+            return _Put(nameNodeClient, sourcePath, fileName);
         }
 
-        private static bool _Put(ref TcpClient nameNodeClient, string sourcePath, string fileName)
+        private static bool _Put(TcpClient nameNodeClient, string sourcePath, string fileName)
         {
             // Get the file info
             string fullFilePath = Path.Combine(sourcePath, fileName);
@@ -30,7 +29,7 @@ namespace BareDFS.Client.Library
 
             ulong fileSize = (ulong)fileInfo.Length;
             var request = new NameNodeWriteRequest { FileName = fileName, FileSize = fileSize };
-            var reply = new NameNodeMetaData[0];
+            var reply = new List<NameNodeMetaData>();
 
             // Call the NameNode to get the block addresses for the file to write to and the block size
             Call(nameNodeClient, Services.WriteData.ToString(), request, ref reply);
@@ -63,7 +62,7 @@ namespace BareDFS.Client.Library
                             ReplicationNodes = remainingDataNodes
                         };
                         //var dataNodeReply = new DataNodeWriteStatus();
-                        var dataNodeReply = "";
+                        DataNodeWriteResponse dataNodeReply = null;
 
                         Call(dataNodeClient, Services.PutBlock.ToString(), dataNodeWriteRequest, ref dataNodeReply);
                     }
@@ -122,22 +121,19 @@ namespace BareDFS.Client.Library
             return (fileContents, true);
         }
 
-        private static void Call<TRequest, TResponse>(TcpClient client, string serviceMethod, TRequest request, ref TResponse response)
+        private static void Call<TRequest, TResponse>(TcpClient client, string serviceMethod, TRequest request, ref TResponse reply)
         {
-            using (var networkStream = client.GetStream())
-            {
-                using (var writer = new StreamWriter(networkStream))
-                {
-                    var jsonRequest = JsonConvert.SerializeObject(new RpcRequest(serviceMethod, request));
-                    writer.WriteLine(jsonRequest);
-                    writer.Flush();
-                }
+            var jsonRequest = JsonConvert.SerializeObject(new RpcRequest(serviceMethod, request));
+            Console.WriteLine($"Client sending: {jsonRequest}");
+            byte[] bytesToSend = Encoding.UTF8.GetBytes(jsonRequest);
+            client.Client.Send(bytesToSend);
 
-                using (var reader = new StreamReader(networkStream))
-                {
-                    var jsonResponse = reader.ReadLine();
-                    response = JsonConvert.DeserializeObject<TResponse>(jsonResponse);
-                }
+            byte[] buffer = new byte[10240];   // 10KB
+            int bytesRead = client.GetStream().Read(buffer, 0, buffer.Length);
+            if (bytesRead > 0)
+            {
+                reply = JsonConvert.DeserializeObject<TResponse>(Encoding.UTF8.GetString(buffer, 0, bytesRead));
+                Console.WriteLine($"Client Received: {reply}");
             }
         }
     }

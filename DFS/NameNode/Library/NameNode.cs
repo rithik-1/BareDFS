@@ -4,7 +4,6 @@ namespace BareDFS.NameNode.Library
     using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
     using System.Net.Sockets;
     using System.Text;
@@ -183,7 +182,7 @@ namespace BareDFS.NameNode.Library
                         {
                             client.Connect(dataNode.Value.Host, dataNode.Value.ServicePort);
                             Console.WriteLine($"Pinging DataNode {dataNodeUri}");
-                            var response = false;
+                            bool response = false;
                             CallService(client, Services.Ping.ToString(), pingRequest, ref response);
 
                             if (response == true)
@@ -301,28 +300,17 @@ namespace BareDFS.NameNode.Library
 
         public static void CallService<TRequest, TReply>(TcpClient client, string serviceMethod, TRequest request, ref TReply reply)
         {
-            using (var networkStream = client.GetStream())
+            var jsonRequest = JsonConvert.SerializeObject(new RpcRequest(serviceMethod, request));
+            Console.WriteLine($"NameNode sending: {jsonRequest}");
+            byte[] bytesToSend = Encoding.UTF8.GetBytes(jsonRequest);
+            client.Client.Send(bytesToSend);
+
+            byte[] buffer = new byte[10240];    // 10KB
+            int bytesRead = client.GetStream().Read(buffer, 0, buffer.Length);
+            if (bytesRead > 0)
             {
-                var writer = new StreamWriter(networkStream);
-                var jsonRequest = JsonConvert.SerializeObject(new RpcRequest(serviceMethod, request));
-                writer.WriteLine(jsonRequest);
-                writer.Flush();
-
-                using (var reader = new StreamReader(networkStream))
-                {
-                    // Wait for some time for the message to appear before closing the connection
-                    var timeout = Task.Delay(5000); // 5 seconds timeout
-                    var readTask = reader.ReadLineAsync();
-
-                    if (Task.WhenAny(timeout, readTask).Result == readTask)
-                    {
-                        reply = JsonConvert.DeserializeObject<TReply>(readTask.Result);
-                    }
-                    else
-                    {
-                        throw new TimeoutException($"The operation: {serviceMethod} has timed out.");
-                    }
-                }
+                reply = JsonConvert.DeserializeObject<TReply>(Encoding.UTF8.GetString(buffer, 0, bytesRead));
+                Console.WriteLine("NameNode Received: " + reply);
             }
         }
     }
