@@ -10,7 +10,7 @@ namespace BareDFS.NameNode.ConsoleApp
         [Option('d', "datanodes", Default=null, Required = true, HelpText = "All the DataNodes Address in the DFS")]
         public required string DataNodesAddr { get; set; }
 
-        [Option("block-size-in-kb", Default=64, Required = false, HelpText = "Size of the Blockin KB. Default is 64KB")]
+        [Option("block-size-in-kb", Default=32, Required = false, HelpText = "Size of the Blockin KB. Default is 32KB")]
         public ulong BlockSize { get; set; }
 
         [Option("replication-factor", Default=null, Required = true, HelpText = "Replication Factor for the Data")]
