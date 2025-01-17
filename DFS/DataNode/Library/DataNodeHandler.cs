@@ -3,7 +3,6 @@ namespace BareDFS.DataNode.Library
     using BareDFS.Common;
     using Newtonsoft.Json;
     using System;
-    using System.IO;
     using System.Net;
     using System.Net.Sockets;
     using System.Text;
@@ -13,11 +12,12 @@ namespace BareDFS.DataNode.Library
     public class DataNodeHandler
     {
         private DataNodeInstance dataNodeInstance { get; set; }
+        private DataNode dataNode { get; set; }
 
         public DataNodeHandler(string dataDirectory, ushort servicePort)
         {
             dataNodeInstance = new DataNodeInstance(dataDirectory, servicePort);
-            DataNode.Instance = dataNodeInstance;
+            dataNode = dataNode == null ? new DataNode(dataNodeInstance) : dataNode;
         }
 
         public void StartDataNodeServer()
@@ -48,18 +48,18 @@ namespace BareDFS.DataNode.Library
                 while (true)
                 {
                     var client = await listener.AcceptTcpClientAsync();
-                    Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Client connected.");
+                    Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] Client connected.");
                     Task.Run(() => HandleClient(client));
                 }
             }
             catch (ObjectDisposedException ex)
             {
-                Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Listener has been stopped: {ex.Message}");
+                Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] Listener has been stopped: {ex.Message}");
                 throw;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Error accepting client: {ex.Message}\n");
+                Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] Error accepting client: {ex.Message}\n");
                 throw;
             }
         }
@@ -75,17 +75,17 @@ namespace BareDFS.DataNode.Library
                 while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                 {
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Received: {message}");
+                    Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] Received: {message}");
                     var response = ExecuteOperation(JsonConvert.DeserializeObject<RpcRequest>(message));
 
-                    Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Sending: {response}");
+                    Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] Sending: {response}");
                     byte[] send = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
                     stream.Write(send, 0, send.Length);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Error handling client: {ex.Message}");
+                Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] Error handling client: {ex.Message}");
             }
         }
 
@@ -97,20 +97,20 @@ namespace BareDFS.DataNode.Library
             switch (operation)
             {
                 case "GetBlock":
-                    return DataNode.GetData(dataNodeInstance.DataDirectory, JsonConvert.DeserializeObject<DataNodeReadRequest>(data));
+                    return dataNode.GetData(dataNodeInstance.DataDirectory, JsonConvert.DeserializeObject<DataNodeReadRequest>(data));
                     break;
                 case "PutBlock":
-                    return DataNode.PutData(dataNodeInstance.DataDirectory, JsonConvert.DeserializeObject<DataNodeWriteRequest>(data));
+                    return dataNode.PutData(dataNodeInstance.DataDirectory, JsonConvert.DeserializeObject<DataNodeWriteRequest>(data));
                     break;
                 case "Ping":
-                    return DataNode.Ping(data);
+                    return dataNode.Ping(data);
                     break;
                 case "Heartbeat":
-                    return DataNode.Heartbeat(data);
+                    return dataNode.Heartbeat(data);
                     break;
                 default:
-                    Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Invalid Operation: {operation}");
-                    return new NotImplementedException($"[DataNode - {dataNodeInstance.NodeId}] Invalid Operation on DataNode.");
+                    Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] Invalid Operation: {operation}");
+                    return new NotImplementedException($"[DataNode - {dataNodeInstance.ServicePort}] Invalid Operation on DataNode.");
             }
         }
     }
