@@ -9,10 +9,21 @@ namespace BareDFS.DataNode.Library
     using System.Text;
 
     [Serializable]
-    public static class DataNode
+    public class DataNode
     {
-        public static DataNodeInstance Instance { get; set; }
-        public static bool Ping(object data)
+        public DataNodeInstance Instance { get; set; }
+
+        public DataNode(DataNodeInstance instance)
+        {
+            if (instance == null)
+            {
+                throw new ArgumentNullException(nameof(instance));
+            }
+
+            Instance = instance;
+        }
+
+        public bool Ping(object data)
         {
             if (data != null)
             {
@@ -23,7 +34,7 @@ namespace BareDFS.DataNode.Library
             return false;
         }
 
-        public static bool Heartbeat(object data)
+        public bool Heartbeat(object data)
         {
             if (data != null)
             {
@@ -33,7 +44,7 @@ namespace BareDFS.DataNode.Library
             return false;
         }
 
-        private static bool ForwardForReplication(DataNodeWriteRequest request, ref DataNodeWriteResponse reply)
+        private bool ForwardForReplication(DataNodeWriteRequest request, ref DataNodeWriteResponse reply)
         {
             var blockId = request.BlockId;
             var blockAddresses = request.ReplicationNodes;
@@ -67,7 +78,7 @@ namespace BareDFS.DataNode.Library
             return true;
         }
 
-        public static DataNodeWriteResponse PutData(string dataDirectory, DataNodeWriteRequest request)
+        public DataNodeWriteResponse PutData(string dataDirectory, DataNodeWriteRequest request)
         {
             var filePath = Path.Combine(dataDirectory, request.BlockId.ToString());
             try
@@ -85,7 +96,7 @@ namespace BareDFS.DataNode.Library
             }
         }
 
-        public static DataNodeReadResponse GetData(string dataDirectory, DataNodeReadRequest request)
+        public DataNodeReadResponse GetData(string dataDirectory, DataNodeReadRequest request)
         {
             var filePath = Path.Combine(dataDirectory, request.BlockId.ToString());
             try
