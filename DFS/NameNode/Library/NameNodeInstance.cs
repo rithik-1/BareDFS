@@ -15,7 +15,7 @@ namespace BareDFS.NameNode.Library
 
         public NameNodeInstance(ushort serverPort, ulong blockSize, ulong replicationFactor, List<string> listOfDataNodes)
         {
-            BlockSize = blockSize;
+            BlockSize = blockSize * 1024;
             ReplicationFactor = replicationFactor;
             Port = serverPort;
 
@@ -33,8 +33,6 @@ namespace BareDFS.NameNode.Library
 
         public void ReportStatus()
         {
-            Console.WriteLine($"NameNode instance is running on port {Port} with block size {BlockSize} KB and replication factor {ReplicationFactor}\n");
-
             if (IdToDataNodes.Count == 0)
             {
                 Console.WriteLine("No DataNodes are in service with the NameNode");
