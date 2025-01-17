@@ -17,25 +17,26 @@ namespace BareDFS.DataNode.Library
         public DataNodeHandler(string dataDirectory, ushort servicePort)
         {
             dataNodeInstance = new DataNodeInstance(dataDirectory, servicePort);
+            DataNode.Instance = dataNodeInstance;
         }
 
         public void StartDataNodeServer()
         {
-            Console.WriteLine($"Data storage location is {dataNodeInstance.DataDirectory}");
+            Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] Data storage location is {dataNodeInstance.DataDirectory}");
 
             TcpListener listener = new TcpListener(IPAddress.Any, dataNodeInstance.ServicePort);
 
             try
             {
                 listener.Start();
-                Console.WriteLine($"DataNode port is {dataNodeInstance.ServicePort}");
+                Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] DataNode port is {dataNodeInstance.ServicePort}");
                 AcceptClients(listener);
 
-                Console.WriteLine($"DataNode daemon started on port: {dataNodeInstance.ServicePort}");
+                Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] DataNode daemon started on port: {dataNodeInstance.ServicePort}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] Error: {ex.Message}");
                 throw;
             }
         }
@@ -47,18 +48,18 @@ namespace BareDFS.DataNode.Library
                 while (true)
                 {
                     var client = await listener.AcceptTcpClientAsync();
-                    Console.WriteLine("Client connected.");
+                    Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Client connected.");
                     Task.Run(() => HandleClient(client));
                 }
             }
             catch (ObjectDisposedException ex)
             {
-                Console.WriteLine($"Listener has been stopped: {ex.Message}");
+                Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Listener has been stopped: {ex.Message}");
                 throw;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error accepting client: {ex.Message}\n");
+                Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Error accepting client: {ex.Message}\n");
                 throw;
             }
         }
@@ -74,17 +75,17 @@ namespace BareDFS.DataNode.Library
                 while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                 {
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Console.WriteLine($"DataNode Received: {message}");
+                    Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Received: {message}");
                     var response = ExecuteOperation(JsonConvert.DeserializeObject<RpcRequest>(message));
 
-                    Console.WriteLine($"DataNode Sending: {response}");
+                    Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Sending: {response}");
                     byte[] send = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
                     stream.Write(send, 0, send.Length);
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[DataNode] Error handling client: {ex.Message}");
+                Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Error handling client: {ex.Message}");
             }
         }
 
@@ -108,8 +109,8 @@ namespace BareDFS.DataNode.Library
                     return DataNode.Heartbeat(data);
                     break;
                 default:
-                    Console.WriteLine($"Invalid Operation: {operation}");
-                    return new NotImplementedException("Invalid Operation on DataNode.");
+                    Console.WriteLine($"[DataNode - {dataNodeInstance.NodeId}] Invalid Operation: {operation}");
+                    return new NotImplementedException($"[DataNode - {dataNodeInstance.NodeId}] Invalid Operation on DataNode.");
             }
         }
     }

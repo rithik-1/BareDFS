@@ -14,7 +14,7 @@ namespace BareDFS.NameNode.ConsoleApp
         {
             if (args.Length < 4)
             {
-                Console.WriteLine("Invalid Arguments");
+                Console.WriteLine("[NameNode] Invalid Arguments");
                 PrintExampleCommand();
             }
 
@@ -42,14 +42,14 @@ namespace BareDFS.NameNode.ConsoleApp
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"[NameNode] Error: {ex.Message}");
             }
         }
 
         static void HandleParseError(IEnumerable<Error> errs)
         {
-            Console.WriteLine("Invalid Arguments");
-            Console.WriteLine("Errors: ");
+            Console.WriteLine("[NameNode] Invalid Arguments");
+            Console.WriteLine("[NameNode] Errors: ");
             foreach (var err in errs)
             {
                 Console.WriteLine(err);

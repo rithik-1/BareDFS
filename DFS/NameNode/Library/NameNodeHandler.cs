@@ -4,7 +4,6 @@ namespace BareDFS.NameNode.Library
     using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Net;
     using System.Net.Sockets;
     using System.Text;
@@ -35,16 +34,16 @@ namespace BareDFS.NameNode.Library
 
             try
             {
-                Console.WriteLine($"Starting NameNode Server ...");
+                Console.WriteLine($"[NameNode] Starting NameNode Server ...");
                 server.Start();
                 AcceptClients(server);
 
-                Console.WriteLine("NameNode daemon started.\n");
+                Console.WriteLine("[NameNode] NameNode daemon started.\n");
                 nameNodeInstance.ReportStatus();
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"[NameNode] Error: {ex.Message}");
             }
         }
 
@@ -55,18 +54,18 @@ namespace BareDFS.NameNode.Library
                 while (true)
                 {
                     var client = await listener.AcceptTcpClientAsync();
-                    Console.WriteLine("Client connected.");
+                    Console.WriteLine("[NameNode] Client connected.");
                     Task.Run(() => HandleClient(client));
                 }
             }
             catch (ObjectDisposedException ex)
             {
-                Console.WriteLine($"Listener has been stopped: {ex.Message}");
+                Console.WriteLine($"[NameNode] Listener has been stopped: {ex.Message}");
                 throw;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error accepting client: {ex.Message}\n");
+                Console.WriteLine($"[NameNode] Error accepting client: {ex.Message}\n");
                 throw;
             }
         }
@@ -82,10 +81,10 @@ namespace BareDFS.NameNode.Library
                 while ((bytesRead = stream.Read(buffer, 0, buffer.Length)) > 0)
                 {
                     string message = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-                    Console.WriteLine($"NameNode Received: {message}");
+                    Console.WriteLine($"[NameNode] Received: {message}");
                     var response = ExecuteOperation(JsonConvert.DeserializeObject<RpcRequest>(message));
 
-                    Console.WriteLine($"NameNode Sending: {response}");
+                    Console.WriteLine($"[NameNode] Sending: {response}");
                     byte[] send = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(response));
                     stream.Write(send, 0, send.Length);
                 }
@@ -111,7 +110,7 @@ namespace BareDFS.NameNode.Library
                     }
                     else
                     {
-                        return new Exception("GetData failed.");
+                        return new Exception("[NameNode] GetData failed.");
                     }
                 case "WriteData":
                     List<NameNodeMetaData> writeDataReply = new List<NameNodeMetaData>();
@@ -121,7 +120,7 @@ namespace BareDFS.NameNode.Library
                     }
                     else
                     {
-                        return new Exception("WriteData failed.");
+                        return new Exception("[NameNode] WriteData failed.");
                     }
                 case "GetBlockSize":
                     ulong blockSize = 0;
@@ -131,11 +130,11 @@ namespace BareDFS.NameNode.Library
                     }
                     else
                     {
-                        return new Exception("GetBlockSize failed.");
+                        return new Exception("[NameNode] GetBlockSize failed.");
                     }
                 default:
-                    Console.WriteLine($"Invalid Operation: {operation}");
-                    return new NotImplementedException("Invalid Operation on DataNode.");
+                    Console.WriteLine($"[NameNode] Invalid Operation: {operation}");
+                    return new NotImplementedException("[NameNode] Invalid Operation on DataNode.");
             }
         }
     }
