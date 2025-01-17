@@ -1,6 +1,7 @@
 namespace BareDFS.DataNode.Library
 {
     using System;
+    using System.IO;
 
     public class DataNodeInstance
     {
@@ -13,6 +14,26 @@ namespace BareDFS.DataNode.Library
             NodeId = nodeId ?? Guid.NewGuid().ToString();
             DataDirectory = address;
             ServicePort = port;
+            CheckPathExists();
+        }
+
+        private void CheckPathExists()
+        {
+            // Check if the path exists
+            if (!Directory.Exists(DataDirectory))
+            {
+                Console.WriteLine($"[DataNode - {ServicePort}] Data location {DataDirectory} does not exist. Creating the directory.");
+                try
+                {
+                    Directory.CreateDirectory(DataDirectory);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[DataNode - {ServicePort}] Exception in creating the directory.");
+                    Console.WriteLine($"[DataNode - {ServicePort}] Error: {ex.Message}");
+                    throw;
+                }
+            }
         }
 
         public void ReportStatus()
