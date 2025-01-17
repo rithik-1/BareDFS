@@ -11,11 +11,12 @@ namespace BareDFS.DataNode.Library
     [Serializable]
     public static class DataNode
     {
+        public static DataNodeInstance Instance { get; set; }
         public static bool Ping(object data)
         {
             if (data != null)
             {
-                Console.WriteLine($"Received ping from NameNode. NameNode: {data}");
+                Console.WriteLine($"[DataNode - {Instance.ServicePort}] Received ping from NameNode. NameNode: {data}");
                 return true;
             }
 
@@ -26,7 +27,7 @@ namespace BareDFS.DataNode.Library
         {
             if (data != null)
             {
-                Console.WriteLine($"Received heartbeat from NameNode.");
+                Console.WriteLine($"[DataNode - {Instance.ServicePort}] Received heartbeat from NameNode.");
                 return true;
             }
             return false;
@@ -78,8 +79,8 @@ namespace BareDFS.DataNode.Library
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed to write data to disk");
-                Console.WriteLine($"Error: {e.Message}\n");
+                Console.WriteLine($"[DataNode - {Instance.ServicePort}] Failed to write data to disk");
+                Console.WriteLine($"[DataNode - {Instance.ServicePort}] Error: {e.Message}\n");
                 return new DataNodeWriteResponse { Status = false };
             }
         }
@@ -94,8 +95,8 @@ namespace BareDFS.DataNode.Library
             }
             catch (Exception e)
             {
-                Console.WriteLine("Failed to read data from disk");
-                Console.WriteLine($"Error: {e.Message}\n");
+                Console.WriteLine($"[DataNode - {Instance.ServicePort}] Failed to read data from disk");
+                Console.WriteLine($"[DataNode - {Instance.ServicePort}] Error: {e.Message}\n");
                 return new DataNodeReadResponse { Status = false, Data = "", Error = e.Message };
             }
         }

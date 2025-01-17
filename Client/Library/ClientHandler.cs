@@ -2,7 +2,6 @@ namespace BareDFS.Client.Library
 {
     using System;
     using System.Net.Sockets;
-    using BareDFS.Common;
 
     public class ClientHandler
     {
@@ -24,7 +23,7 @@ namespace BareDFS.Client.Library
             }
             finally
             {
-                Console.WriteLine("Closing connection");
+                Console.WriteLine("[Client] Closing connection");
                 tcpClient.Close();
                 tcpClient.Dispose();
             }
@@ -44,7 +43,7 @@ namespace BareDFS.Client.Library
             }
             finally
             {
-                Console.WriteLine("Closing connection");
+                Console.WriteLine("[Client] Closing connection");
                 tcpClient.Close();
                 tcpClient.Dispose();
             }
@@ -55,13 +54,13 @@ namespace BareDFS.Client.Library
             string[] hostPort = nameNodeAddress.Split(':');
             if (hostPort.Length != 2)
             {
-                throw new ArgumentException("Invalid nameNodeAddress format");
+                throw new ArgumentException("[Client] Invalid nameNodeAddress format");
             }
 
             string host = hostPort[0];
             int port = int.Parse(hostPort[1]);
 
-            Console.WriteLine($"NameNode to connect to is {nameNodeAddress}");
+            Console.WriteLine($"[Client] NameNode to connect to is {nameNodeAddress}");
             return new TcpClient(host, port);
         }
     }

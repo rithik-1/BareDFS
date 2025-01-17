@@ -57,7 +57,7 @@ namespace BareDFS.NameNode.Library
             nameNodeInstance.FileNameToBlocks[request.FileName] = new List<string>();
             var numberOfBlocksToAllocate = (ulong)Math.Ceiling((double)request.FileSize / nameNodeInstance.BlockSize);
             reply = AllocateBlocks(request.FileName, numberOfBlocksToAllocate);
-            Console.WriteLine($"WriteData: {numberOfBlocksToAllocate} blocks allocated for file name {request.FileName}.");
+            Console.WriteLine($"[NameNode] WriteData: {numberOfBlocksToAllocate} blocks allocated for file name {request.FileName}.");
             return true;
         }
 
@@ -117,12 +117,12 @@ namespace BareDFS.NameNode.Library
                             var response = false;
                             CallService(client, Services.Heartbeat.ToString(), heartbeatRequest, ref response);
                             if (!response)
-                                Console.WriteLine($"No heartbeat response from DataNode {nodeAddres.Host}:{nodeAddres.ServicePort}");
+                                Console.WriteLine($"[NameNode] No heartbeat response from DataNode {nodeAddres.Host}:{nodeAddres.ServicePort}");
                         }
                     }
                     catch
                     {
-                        Console.WriteLine($"No heartbeat received from DataNode {nodeAddres.Host}:{nodeAddres.ServicePort}");
+                        Console.WriteLine($"[NameNode] No heartbeat received from DataNode {nodeAddres.Host}:{nodeAddres.ServicePort}");
                         bool reply = false;
                         ReDistributeData(nodeAddres, ref reply);
                         nameNodeInstance.IdToDataNodes.Remove(dataNode.Key);
@@ -139,7 +139,7 @@ namespace BareDFS.NameNode.Library
 
             if (listOfDataNodes.Count == 0)
             {
-                Console.WriteLine("No DataNodes specified, discovering ...");
+                Console.WriteLine("[NameNode] No DataNodes specified, discovering ...");
                 int serverPort = 7000;
 
                 while (serverPort < 7050)
@@ -150,17 +150,17 @@ namespace BareDFS.NameNode.Library
                         using (var client = new TcpClient())
                         {
                             client.Connect(host, serverPort);
-                            Console.WriteLine($"Pinging DataNode {dataNodeUri}");
+                            Console.WriteLine($"[NameNode] Pinging DataNode {dataNodeUri}");
                             var response = false;
                             CallService(client, Services.Ping.ToString(), pingRequest, ref response);
 
                             if (response == true)
                             {
-                                Console.WriteLine($"Ack received from {dataNodeUri}");
+                                Console.WriteLine($"[NameNode] Ack received from {dataNodeUri}");
                                 listOfDataNodes.Add(Guid.NewGuid(), new NodeAddress { Host = host, ServicePort = (ushort)serverPort });
                             }
                             else
-                                Console.WriteLine($"No ack received from {dataNodeUri}");
+                                Console.WriteLine($"[NameNode] No ack received from {dataNodeUri}");
                         }
                     }
                     catch (Exception ex)
@@ -172,7 +172,7 @@ namespace BareDFS.NameNode.Library
             }
             else
             {
-                Console.WriteLine($"Pinging DataNode(s) specified in the input ...");
+                Console.WriteLine($"[NameNode] Pinging DataNode(s) specified in the input ...");
                 foreach (var dataNode in listOfDataNodes)
                 {
                     string dataNodeUri = $"{dataNode.Value.Host}:{dataNode.Value.ServicePort}";
@@ -181,26 +181,26 @@ namespace BareDFS.NameNode.Library
                         using (var client = new TcpClient())
                         {
                             client.Connect(dataNode.Value.Host, dataNode.Value.ServicePort);
-                            Console.WriteLine($"Pinging DataNode {dataNodeUri}");
+                            Console.WriteLine($"[NameNode] Pinging DataNode {dataNodeUri}");
                             bool response = false;
                             CallService(client, Services.Ping.ToString(), pingRequest, ref response);
 
                             if (response == true)
-                                Console.WriteLine($"Ack received from {dataNodeUri}");
+                                Console.WriteLine($"[NameNode] Ack received from {dataNodeUri}");
                             else
                             {
-                                Console.WriteLine($"No ack received from {dataNodeUri}");
+                                Console.WriteLine($"[NameNode] No ack received from {dataNodeUri}");
                                 listOfDataNodes.Remove(dataNode.Key);
                             }
                         }
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"Exception in receiving ack from {dataNodeUri}");
-                        Console.WriteLine($"Exception: {ex.Message}");
+                        Console.WriteLine($"[NameNode] Exception in receiving ack from {dataNodeUri}");
+                        Console.WriteLine($"[NameNode] Exception: {ex.Message}");
                         listOfDataNodes.Remove(dataNode.Key);
                     }
-                    Console.WriteLine($"DataNode ID: {dataNode.Key} at {dataNode.Value.Host}:{dataNode.Value.ServicePort}\n");
+                    Console.WriteLine($"[NameNode] DataNode ID: {dataNode.Key} at {dataNode.Value.Host}:{dataNode.Value.ServicePort}\n");
                 }
             }
 
@@ -209,7 +209,7 @@ namespace BareDFS.NameNode.Library
 
         public bool ReDistributeData(NodeAddress deadDataNode, ref bool reply)
         {
-            Console.WriteLine($"DataNode {deadDataNode.Host}:{deadDataNode.ServicePort} is dead, trying to redistribute data");
+            Console.WriteLine($"[NameNode] DataNode {deadDataNode.Host}:{deadDataNode.ServicePort} is dead, trying to redistribute data");
             Guid deadDataNodeId;
 
             // Get the dead datanode id
@@ -244,7 +244,7 @@ namespace BareDFS.NameNode.Library
 
             if (nameNodeInstance.IdToDataNodes.Count < (int)nameNodeInstance.ReplicationFactor)
             {
-                Console.WriteLine("Replication not possible due to unavailability of sufficient DataNode(s)");
+                Console.WriteLine("[NameNode] Replication not possible due to unavailability of sufficient DataNode(s)");
                 return false;
             }
 
@@ -291,7 +291,7 @@ namespace BareDFS.NameNode.Library
                         CallService(targetDataNodeInstance, Services.PutBlock.ToString(), putRequest, ref putReply);
                     }
 
-                    Console.WriteLine($"Block {blockToReplicate.BlockId} replication completed for {string.Join(", ", targetDataNodeIds)}");
+                    Console.WriteLine($"[NameNode] Block {blockToReplicate.BlockId} replication completed for {string.Join(", ", targetDataNodeIds)}");
                 }
             }
 
@@ -301,7 +301,7 @@ namespace BareDFS.NameNode.Library
         public static void CallService<TRequest, TReply>(TcpClient client, string serviceMethod, TRequest request, ref TReply reply)
         {
             var jsonRequest = JsonConvert.SerializeObject(new RpcRequest(serviceMethod, request));
-            Console.WriteLine($"NameNode sending: {jsonRequest}");
+            Console.WriteLine($"[NameNode] Sending: {jsonRequest}");
             byte[] bytesToSend = Encoding.UTF8.GetBytes(jsonRequest);
             client.Client.Send(bytesToSend);
 
@@ -310,7 +310,7 @@ namespace BareDFS.NameNode.Library
             if (bytesRead > 0)
             {
                 reply = JsonConvert.DeserializeObject<TReply>(Encoding.UTF8.GetString(buffer, 0, bytesRead));
-                Console.WriteLine("NameNode Received: " + reply);
+                Console.WriteLine($"[NameNode] Received: " + reply);
             }
         }
     }
