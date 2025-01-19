@@ -48,7 +48,7 @@ namespace BareDFS.DataNode.Library
                 while (true)
                 {
                     var client = await listener.AcceptTcpClientAsync();
-                    Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] Client connected.");
+                    //Console.WriteLine($"[DataNode - {dataNodeInstance.ServicePort}] Client connected.");
                     Task.Run(() => HandleClient(client));
                 }
             }

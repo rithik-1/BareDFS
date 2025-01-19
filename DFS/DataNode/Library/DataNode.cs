@@ -27,7 +27,7 @@ namespace BareDFS.DataNode.Library
         {
             if (data != null)
             {
-                Console.WriteLine($"[DataNode - {Instance.ServicePort}] Received ping from NameNode. NameNode: {data}");
+                //Console.WriteLine($"[DataNode - {Instance.ServicePort}] Received ping from NameNode. NameNode: {data}");
                 return true;
             }
 
@@ -38,7 +38,7 @@ namespace BareDFS.DataNode.Library
         {
             if (data != null)
             {
-                Console.WriteLine($"[DataNode - {Instance.ServicePort}] Received heartbeat from NameNode.");
+                //Console.WriteLine($"[DataNode - {Instance.ServicePort}] Received heartbeat from NameNode.");
                 return true;
             }
             return false;

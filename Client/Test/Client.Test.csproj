@@ -1,14 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <PackageId>BareDFS.Client.Test</PackageId>
     <OutputType>Library</OutputType>
     <RootNamespace>BareDFS.Client.Test</RootNamespace>
     <AssemblyName>BareDFS.Client.Test</AssemblyName>
+    <TestCode>true</TestCode>
+    <TestProjectType>UnitTest</TestProjectType>
+    <CoverageDisabled>true</CoverageDisabled>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <ProjectReference Include="..\..\Common\Common.csproj"/>
+    <ProjectReference Include="..\..\DFS\NameNode\Test\BareDFS.NameNode.Test.csproj"/>
+    <ProjectReference Include="..\Library\Client.Library.csproj"/>
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 </Project>

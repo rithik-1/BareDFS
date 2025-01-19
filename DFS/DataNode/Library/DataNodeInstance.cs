@@ -9,10 +9,10 @@ namespace BareDFS.DataNode.Library
         public string DataDirectory { get; private set; }
         public ushort ServicePort { get; private set; }
 
-        public DataNodeInstance(string address, ushort port, string nodeId = null)
+        public DataNodeInstance(string path, ushort port, string nodeId = null)
         {
             NodeId = nodeId ?? Guid.NewGuid().ToString();
-            DataDirectory = address;
+            DataDirectory = path;
             ServicePort = port;
             CheckPathExists();
         }
