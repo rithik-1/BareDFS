@@ -61,7 +61,6 @@ namespace BareDFS.Client.Library
                             Data = trimmedBytes,
                             ReplicationNodes = remainingDataNodes
                         };
-                        //var dataNodeReply = new DataNodeWriteStatus();
                         DataNodeWriteResponse dataNodeReply = null;
 
                         Call(dataNodeClient, Services.PutBlock.ToString(), dataNodeWriteRequest, ref dataNodeReply);

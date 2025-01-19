@@ -1,12 +1,14 @@
 namespace BareDFS.DataNode.Library
 {
     using BareDFS.Common;
+    using Newtonsoft.Json;
     using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.IO;
     using System.Net.Sockets;
     using System.Text;
+    using System.Threading.Tasks;
 
     [Serializable]
     public class DataNode
@@ -44,7 +46,7 @@ namespace BareDFS.DataNode.Library
             return false;
         }
 
-        private bool ForwardForReplication(DataNodeWriteRequest request, ref DataNodeWriteResponse reply)
+        private bool ForwardForReplication(DataNodeWriteRequest request, DataNodeWriteResponse reply)
         {
             var blockId = request.BlockId;
             var blockAddresses = request.ReplicationNodes;
@@ -54,25 +56,35 @@ namespace BareDFS.DataNode.Library
                 return true;
             }
 
+            Console.WriteLine($"[DataNode - {Instance.ServicePort}] Forwarding data for replication.");
+            Console.WriteLine($"[DataNode - {Instance.ServicePort}] Replication Nodes Count: {blockAddresses.Count}");
+
             var startingDataNode = blockAddresses[0];
             var remainingDataNodes = new List<NodeAddress>();
             if (blockAddresses.Count > 1)
                 remainingDataNodes = blockAddresses.Skip(1).ToList();
 
-            using (var client = new TcpClient(startingDataNode.Host, int.Parse(startingDataNode.ServicePort.ToString())))
+            using (var dataNodeClient = new TcpClient(startingDataNode.Host, int.Parse(startingDataNode.ServicePort.ToString())))
             {
-                var stream = client.GetStream();
-                //var formatter = new BinaryFormatter();
-                var payloadRequest = new DataNodeWriteRequest
+                try
                 {
-                    BlockId = blockId,
-                    Data = request.Data,
-                    ReplicationNodes = remainingDataNodes
-                };
+                    var stream = dataNodeClient.GetStream();
+                    var dataNodeWriteRequest = new DataNodeWriteRequest
+                    {
+                        BlockId = blockId,
+                        Data = request.Data,
+                        ReplicationNodes = remainingDataNodes
+                    };
 
-                //formatter.Serialize(stream, "Service.PutData");
-                //formatter.Serialize(stream, payloadRequest);
-                //reply = (DataNodeWriteStatus)formatter.Deserialize(stream);
+                    Call(dataNodeClient, Services.PutBlock.ToString(), dataNodeWriteRequest, ref reply);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"[DataNode - {Instance.ServicePort}] Failed to forward data for replication.");
+                    Console.WriteLine($"[DataNode - {Instance.ServicePort}] Error: {e.Message}\n");
+                    reply.Status = false;
+                    return false;
+                }
             }
 
             return true;
@@ -85,7 +97,7 @@ namespace BareDFS.DataNode.Library
             {
                 File.WriteAllText(filePath, request.Data.ToString(), Encoding.UTF8);
                 var reply = new DataNodeWriteResponse { Status = true };
-                //var status = ForwardForReplication(request, ref reply);
+                Task.Run(() => ForwardForReplication(request, reply));
                 return reply;
             }
             catch (Exception e)
@@ -109,6 +121,22 @@ namespace BareDFS.DataNode.Library
                 Console.WriteLine($"[DataNode - {Instance.ServicePort}] Failed to read data from disk");
                 Console.WriteLine($"[DataNode - {Instance.ServicePort}] Error: {e.Message}\n");
                 return new DataNodeReadResponse { Status = false, Data = "", Error = e.Message };
+            }
+        }
+
+        private void Call<TRequest, TResponse>(TcpClient client, string serviceMethod, TRequest request, ref TResponse reply)
+        {
+            var jsonRequest = JsonConvert.SerializeObject(new RpcRequest(serviceMethod, request));
+            Console.WriteLine($"[DataNode - {Instance.ServicePort}] Sending: {jsonRequest}");
+            byte[] bytesToSend = Encoding.UTF8.GetBytes(jsonRequest);
+            client.Client.Send(bytesToSend);
+
+            byte[] buffer = new byte[10240];   // 10KB
+            int bytesRead = client.GetStream().Read(buffer, 0, buffer.Length);
+            if (bytesRead > 0)
+            {
+                reply = JsonConvert.DeserializeObject<TResponse>(Encoding.UTF8.GetString(buffer, 0, bytesRead));
+                Console.WriteLine($"DataNode - {Instance.ServicePort} Client Received: {reply}");
             }
         }
     }
